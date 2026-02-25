@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { panemtPasreizejoLietotaju, irAdmin } from "@/lib/auth";
+import { panemtPasreizejaisLietotajs, irAdmin } from "@/lib/auth";
 import NavBar from "./NavBar";
 
 export const dynamic = "force-dynamic";
@@ -15,7 +15,7 @@ export default async function RootLayout({
 }: {
 	children: React.ReactNode;
 }) {
-	const lietotajs = await panemtPasreizejoLietotaju();
+	const lietotajs = await panemtPasreizejaisLietotajs();
 	const lietotajsIsAdmin = await irAdmin();
 
 	return (

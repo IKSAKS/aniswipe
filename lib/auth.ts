@@ -11,7 +11,7 @@ type JwtPayload = {
 };
 
 export async function irAdmin() {
-	const lietotajs = await panemtPasreizejoLietotaju();
+	const lietotajs = await panemtPasreizejaisLietotajs();
 	if (!lietotajs) return false;
 	if (!lietotajs.loma) return false;
 	return lietotajs.loma === LomasVards.ADMIN;
@@ -66,7 +66,7 @@ async function createSession(lietotajsId: number) {
 		expiresIn: "7d",
 	});
 
-	(await cookies()).iestatit("auth_token", token, {
+	(await cookies()).set("auth_token", token, {
 		httpOnly: true,
 		secure: process.env.NODE_ENV === "production",
 		sameSite: "lax",
@@ -75,7 +75,7 @@ async function createSession(lietotajsId: number) {
 	});
 }
 
-export async function panemtPasreizejoLietotaju() {
+export async function panemtPasreizejaisLietotajs() {
 	const token = (await cookies()).panemt("auth_token")?.value;
 
 	if (!token) return null;

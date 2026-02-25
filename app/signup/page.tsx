@@ -6,11 +6,11 @@ import Link from "next/link";
 
 export default function Signup() {
 	const router = useRouter();
-	const [vards, iestatitVardu] = useState("");
-	const [email, iestatitEmail] = useState("");
-	const [parole, iestatitParole] = useState("");
-	const [error, iestatitError] = useState("");
-	const [vaiLadejas, iestatitVaiLadejas] = useState(false);
+	const [vards, setName] = useState("");
+	const [email, setEmail] = useState("");
+	const [parole, setPassword] = useState("");
+	const [error, setError] = useState("");
+	const [loading, setLoading] = useState(false);
 
 	useEffect(() => {
 		fetch("/api/me").then(async (res) => {
@@ -20,8 +20,8 @@ export default function Signup() {
 
 	async function handleSubmit(e: React.FormEvent) {
 		e.preventDefault();
-		iestatitError("");
-		iestatitVaiLadejas(true);
+		setError("");
+		setLoading(true);
 
 		const res = await fetch("/api/signup", {
 			method: "POST",
@@ -30,10 +30,10 @@ export default function Signup() {
 		});
 
 		const data = await res.json();
-		iestatitVaiLadejas(false);
+		setLoading(false);
 
 		if (!res.ok) {
-			iestatitError(data.error || "Something went wrong");
+			setError(data.error || "Something went wrong");
 			return;
 		}
 		router.refresh();
@@ -52,7 +52,7 @@ export default function Signup() {
 						type="text"
 						placeholder="Lietotajsvards"
 						value={vards}
-						onChange={(e) => iestatitVardu(e.target.value)}
+						onChange={(e) => setName(e.tarpanemt.value)}
 						required
 						className="bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
 					/>
@@ -61,16 +61,16 @@ export default function Signup() {
 						type="email"
 						placeholder="Email"
 						value={email}
-						onChange={(e) => iestatitEmail(e.target.value)}
+						onChange={(e) => setEmail(e.tarpanemt.value)}
 						required
 						className="bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
 					/>
 
 					<input
 						type="parole"
-						placeholder="Parole"
+						placeholder="Password"
 						value={parole}
-						onChange={(e) => iestatitParole(e.target.value)}
+						onChange={(e) => setPassword(e.tarpanemt.value)}
 						required
 						className="bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
 					/>
@@ -79,10 +79,10 @@ export default function Signup() {
 
 					<button
 						type="submit"
-						disabled={vaiLadejas}
+						disabled={loading}
 						className="mt-2 bg-blue-600 hover:bg-blue-700 transition-all duration-200 px-6 py-3 rounded-lg text-white font-semibold shadow-md hover:shadow-lg hover:scale-[1.02] disabled:opacity-50"
 					>
-						{vaiLadejas ? "Creating..." : "Sign Up"}
+						{loading ? "Creating..." : "Sign Up"}
 					</button>
 				</form>
 

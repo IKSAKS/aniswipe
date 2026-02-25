@@ -28,8 +28,8 @@ export default function AdminLibraryClient({
 	adminView: boolean;
 }) {
 	const router = useRouter();
-	const [editing, iestatitEditing] = useState<Record<string, boolean>>({});
-	const [values, iestatitValues] = useState<Record<string, string>>(
+	const [editing, setEditing] = useState<Record<string, boolean>>({});
+	const [values, setValues] = useState<Record<string, string>>(
 		Object.fromEntries(
 			topZanri.map((g) => [
 				g.vards,
@@ -37,15 +37,13 @@ export default function AdminLibraryClient({
 			]),
 		),
 	);
-	const [savingZanrs, iestatitSavingZanrs] = useState<Record<string, boolean>>(
-		{},
-	);
-	const [removing, iestatitRemoving] = useState<Record<number, boolean>>({});
+	const [savingZanrs, setSavingZanrs] = useState<Record<string, boolean>>({});
+	const [removing, setRemoving] = useState<Record<number, boolean>>({});
 
 	async function saveZanrs(vards: string) {
 		const raw = values[vards];
 		const smagums = Number(raw);
-		iestatitSavingZanrs((s) => ({ ...s, [vards]: true }));
+		setSavingZanrs((s) => ({ ...s, [vards]: true }));
 		try {
 			const res = await fetch("/api/admin/library", {
 				method: "POST",
@@ -61,20 +59,20 @@ export default function AdminLibraryClient({
 				const txt = await res.text();
 				alert("Failed to save zanrs: " + txt);
 			} else {
-				iestatitEditing((e) => ({ ...e, [vards]: false }));
+				setEditing((e) => ({ ...e, [vards]: false }));
 				router.refresh();
 			}
 		} catch (err) {
 			console.error(err);
 			alert("Network error when saving zanrs");
 		} finally {
-			iestatitSavingZanrs((s) => ({ ...s, [vards]: false }));
+			setSavingZanrs((s) => ({ ...s, [vards]: false }));
 		}
 	}
 
 	async function removePatik(animeId: number) {
 		if (!confirm("Remove this patik anime from the lietotajs?")) return;
-		iestatitRemoving((r) => ({ ...r, [animeId]: true }));
+		setRemoving((r) => ({ ...r, [animeId]: true }));
 		try {
 			const res = await fetch("/api/admin/library", {
 				method: "POST",
@@ -95,7 +93,7 @@ export default function AdminLibraryClient({
 			console.error(err);
 			alert("Network error when removing like");
 		} finally {
-			iestatitRemoving((r) => ({ ...r, [animeId]: false }));
+			setRemoving((r) => ({ ...r, [animeId]: false }));
 		}
 	}
 
@@ -108,13 +106,13 @@ export default function AdminLibraryClient({
 					key={vards}
 					value={values[vards] ?? ""}
 					onChange={(e) =>
-						iestatitValues((v) => ({ ...v, [vards]: e.tarpanemt.value }))
+						setValues((v) => ({ ...v, [vards]: e.tarpanemt.value }))
 					}
 					onBlur={() => saveZanrs(vards)}
 					onKeyDown={(e) => {
 						if (e.key === "Enter") saveZanrs(vards);
 						if (e.key === "Escape")
-							iestatitEditing((s) => ({ ...s, [vards]: false }));
+							setEditing((s) => ({ ...s, [vards]: false }));
 					}}
 					className="bg-white/5 px-3 py-1 rounded-full text-sm w-20
             text-left outline-none placeholder:text-slate-400"
@@ -123,7 +121,7 @@ export default function AdminLibraryClient({
 			) : (
 				<button
 					key={vards}
-					onClick={() => iestatitEditing((s) => ({ ...s, [vards]: true }))}
+					onClick={() => setEditing((s) => ({ ...s, [vards]: true }))}
 					className="bg-white/5 px-3 py-1 rounded-full text-sm
             flex items-center gap-2"
 					title="Click to edit smagums"

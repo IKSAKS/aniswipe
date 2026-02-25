@@ -31,10 +31,10 @@ type Lietotajs = {
 export default function SwipeClient({ lietotajs }: { lietotajs: Lietotajs }) {
 	const router = useRouter();
 
-	const [anime, iestatitAnime] = useState<Anime | null>(null);
-	const [searchZanri, iestatitSearchZanri] = useState<number[]>([]);
-	const [nextAnime, iestatitNakamoAnime] = useState<Anime | null>(null);
-	const [vaiLadejas, iestatitVaiLadejas] = useState(true);
+	const [anime, setAnime] = useState<Anime | null>(null);
+	const [searchZanri, setSearchZanri] = useState<number[]>([]);
+	const [nextAnime, setNextAnime] = useState<Anime | null>(null);
+	const [loading, setLoading] = useState(true);
 
 	const ielade = useRef(false);
 
@@ -60,7 +60,7 @@ export default function SwipeClient({ lietotajs }: { lietotajs: Lietotajs }) {
 
 			if (data?.data?.mal_id) {
 				const ani = data.data as Anime;
-				iestatitSearchZanri(ani.searchZanri || []);
+				setSearchZanri(ani.searchZanri || []);
 				return ani;
 			}
 		} catch (err) {
@@ -76,27 +76,27 @@ export default function SwipeClient({ lietotajs }: { lietotajs: Lietotajs }) {
 		(async () => {
 			const first = await ieladetAnime();
 			const second = await ieladetAnime();
-			iestatitAnime(first);
-			iestatitNakamoAnime(second);
-			iestatitVaiLadejas(false);
+			setAnime(first);
+			setNextAnime(second);
+			setLoading(false);
 		})();
 	}, []);
 
-	const preloadNakamo = async () => {
+	const preloadNext = async () => {
 		return await ieladetAnime();
 	};
 
-	const panemtNakamoAnime = async () => {
-		iestatitVaiLadejas(true);
+	const panemtNextAnime = async () => {
+		setLoading(true);
 
-		const pasreizejaisNakamo = nextAnime ?? (await preloadNakamo());
-		iestatitAnime(pasreizejaisNakamo);
+		const pasreizejaisNext = nextAnime ?? (await preloadNext());
+		setAnime(pasreizejaisNext);
 
-		const preload = await preloadNakamo();
-		iestatitNakamoAnime(preload);
+		const preload = await preloadNext();
+		setNextAnime(preload);
 
 		x.set(0);
-		iestatitVaiLadejas(false);
+		setLoading(false);
 	};
 
 	const sendFeedback = async (patik: boolean) => {
@@ -116,12 +116,12 @@ export default function SwipeClient({ lietotajs }: { lietotajs: Lietotajs }) {
 
 	const handlePatik = async () => {
 		await sendFeedback(true);
-		await panemtNakamoAnime();
+		await panemtNextAnime();
 	};
 
 	const handleNepatik = async () => {
 		await sendFeedback(false);
-		await panemtNakamoAnime();
+		await panemtNextAnime();
 	};
 
 	const zanrss =
@@ -133,7 +133,7 @@ export default function SwipeClient({ lietotajs }: { lietotajs: Lietotajs }) {
 	return (
 		<main className="flex flex-col items-center justify-center h-screen overflow-hidden bg-gradient-to-br from-slate-900 via-[#0f172a] to-slate-800 text-slate-100 select-none">
 			<AnimatePresence mode="wait">
-				{!vaiLadejas && anime ? (
+				{!loading && anime ? (
 					<motion.div
 						key={anime.mal_id}
 						style={{ x, rotate, opacity }}
@@ -141,7 +141,7 @@ export default function SwipeClient({ lietotajs }: { lietotajs: Lietotajs }) {
 						dragConstraints={{ left: 0, right: 0 }}
 						dragElastic={0.8}
 						onDragEnd={() => {
-							if (Math.abs(x.get()) > 120) panemtNakamoAnime();
+							if (Math.abs(x.get()) > 120) panemtNextAnime();
 							else x.set(0);
 						}}
 						initial={{ scale: 0.95, opacity: 0, y: 20 }}
@@ -162,7 +162,7 @@ export default function SwipeClient({ lietotajs }: { lietotajs: Lietotajs }) {
 								alt={anime.title}
 								className="w-full h-full object-cover"
 							/>
-							<div className="absolute iniestatit-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
+							<div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
 							<div className="absolute bottom-0 left-0 p-5 text-left w-full">
 								<h2 className="text-2xl font-semibold text-white drop-shadow-md">
 									{anime.title}
@@ -186,7 +186,7 @@ export default function SwipeClient({ lietotajs }: { lietotajs: Lietotajs }) {
 				</button>
 
 				<button
-					onClick={panemtNakamoAnime}
+					onClick={panemtNextAnime}
 					className="p-4 bg-sky-500/90 hover:bg-sky-600 rounded-full transition shadow-[0_0_30px_rgba(56,189,248,0.4)]"
 					title="Reload"
 				>

@@ -1,8 +1,8 @@
-import { panemtPasreizejoLietotaju } from "@/lib/auth";
+import { panemtPasreizejaisLietotajs } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
 export async function GET() {
-	const lietotajs = await panemtPasreizejoLietotaju();
+	const lietotajs = await panemtPasreizejaisLietotajs();
 
 	if (!lietotajs) {
 		return NextResponse.json(null, { status: 401 });

@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { panemtRandomAnime, panemtAnimeById } from "@/lib/jikan";
-import { panemtPasreizejoLietotaju } from "@/lib/auth";
+import { panemtPasreizejaisLietotajs } from "@/lib/auth";
 
 export async function GET() {
 	try {
-		const lietotajs = await panemtPasreizejoLietotaju();
+		const lietotajs = await panemtPasreizejaisLietotajs();
 		const lietotajsId = lietotajs?.id;
 		if (!lietotajsId)
 			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
