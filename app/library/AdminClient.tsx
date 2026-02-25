@@ -9,74 +9,77 @@ type Anime = {
 	images?: {
 		jpg?: { image_url?: string; large_image_url?: string };
 	};
-	genres?: { name: string }[];
+	zanrss?: { vards: string }[];
 	synopsis?: string | null;
 	url?: string;
 };
 
-type TopGenre = { name: string; weight?: number };
+type TopZanrs = { vards: string; smagums?: number };
 
 export default function AdminLibraryClient({
-	userId,
-	likedAnime,
-	topGenres,
+	lietotajsId,
+	patikAnime,
+	topZanri,
 	adminView,
 }: {
-	userId: number;
-	likedAnime: Anime[];
-	topGenres: TopGenre[];
+	lietotajsId: number;
+	patikAnime: Anime[];
+	topZanri: TopZanrs[];
 	adminView: boolean;
 }) {
 	const router = useRouter();
 	const [editing, setEditing] = useState<Record<string, boolean>>({});
 	const [values, setValues] = useState<Record<string, string>>(
 		Object.fromEntries(
-			topGenres.map((g) => [g.name, g.weight != null ? String(g.weight) : "0"]),
+			topZanri.map((g) => [
+				g.vards,
+				g.smagums != null ? String(g.smagums) : "0",
+			]),
 		),
 	);
-	const [savingGenre, setSavingGenre] = useState<Record<string, boolean>>({});
+	const [savingZanrs, setSavingZanrs] = useState<Record<string, boolean>>({});
 	const [removing, setRemoving] = useState<Record<number, boolean>>({});
 
-	async function saveGenre(name: string) {
-		const raw = values[name];
-		const weight = Number(raw);
-		setSavingGenre((s) => ({ ...s, [name]: true }));
+	async function saveZanrs(vards: string) {
+		const raw = values[vards];
+		const smagums = Number(raw);
+		setSavingZanrs((s) => ({ ...s, [vards]: true }));
 		try {
 			const res = await fetch("/api/admin/library", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
-					action: "updateGenre",
-					userId,
-					genreName: name,
-					weight,
+					action: "updateZanrs",
+					lietotajsId,
+					zanrsName: vards,
+					smagums,
 				}),
 			});
 			if (!res.ok) {
 				const txt = await res.text();
-				alert("Failed to save genre: " + txt);
+				alert("Failed to save zanrs: " + txt);
 			} else {
-				setEditing((e) => ({ ...e, [name]: false }));
+				setEditing((e) => ({ ...e, [vards]: false }));
 				router.refresh();
 			}
 		} catch (err) {
 			console.error(err);
-			alert("Network error when saving genre");
+			alert("Network error when saving zanrs");
 		} finally {
-			setSavingGenre((s) => ({ ...s, [name]: false }));
+			setSavingZanrs((s) => ({ ...s, [vards]: false }));
 		}
 	}
 
-	async function removeLike(animeId: number) {
-		if (!confirm("Remove this liked anime from the user?")) return;
+	async function removePatik(animeId: number) {
+		if (!confirm("Remove this patik anime from the lietotajs?")) return;
 		setRemoving((r) => ({ ...r, [animeId]: true }));
 		try {
 			const res = await fetch("/api/admin/library", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
-					action: "removeLike",
-					userId,
+					action: "removePatik",
+					lietotajsId,
 					animeId,
 				}),
 			});
@@ -94,20 +97,22 @@ export default function AdminLibraryClient({
 		}
 	}
 
-	const genresUi = topGenres.length ? (
-		topGenres.map((g) => {
-			const name = g.name;
-			const isEditing = !!editing[name];
+	const zanrssUi = topZanri.length ? (
+		topZanri.map((g) => {
+			const vards = g.vards;
+			const isEditing = !!editing[vards];
 			return isEditing ? (
 				<input
-					key={name}
-					value={values[name] ?? ""}
-					onChange={(e) => setValues((v) => ({ ...v, [name]: e.target.value }))}
-					onBlur={() => saveGenre(name)}
+					key={vards}
+					value={values[vards] ?? ""}
+					onChange={(e) =>
+						setValues((v) => ({ ...v, [vards]: e.tarpanemt.value }))
+					}
+					onBlur={() => saveZanrs(vards)}
 					onKeyDown={(e) => {
-						if (e.key === "Enter") saveGenre(name);
+						if (e.key === "Enter") saveZanrs(vards);
 						if (e.key === "Escape")
-							setEditing((s) => ({ ...s, [name]: false }));
+							setEditing((s) => ({ ...s, [vards]: false }));
 					}}
 					className="bg-white/5 px-3 py-1 rounded-full text-sm w-20
             text-left outline-none placeholder:text-slate-400"
@@ -115,26 +120,26 @@ export default function AdminLibraryClient({
 				/>
 			) : (
 				<button
-					key={name}
-					onClick={() => setEditing((s) => ({ ...s, [name]: true }))}
+					key={vards}
+					onClick={() => setEditing((s) => ({ ...s, [vards]: true }))}
 					className="bg-white/5 px-3 py-1 rounded-full text-sm
             flex items-center gap-2"
-					title="Click to edit weight"
+					title="Click to edit smagums"
 				>
-					<span>{name}</span>
+					<span>{vards}</span>
 					<span className="text-slate-400 text-xs">
-						{g.weight ? `· ${g.weight}` : ""}
+						{g.smagums ? `· ${g.smagums}` : ""}
 					</span>
 				</button>
 			);
 		})
 	) : (
-		<p className="text-slate-400">No genre data yet</p>
+		<p className="text-slate-400">No zanrs data yet</p>
 	);
 
-	const animeGrid = likedAnime.length ? (
+	const animeGrid = patikAnime.length ? (
 		<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mt-4">
-			{likedAnime.map((a) => (
+			{patikAnime.map((a) => (
 				<article
 					key={a.mal_id}
 					className="bg-white/5 rounded-2xl overflow-hidden shadow-sm"
@@ -142,9 +147,9 @@ export default function AdminLibraryClient({
 					<div className="relative h-[260px] w-full bg-slate-800/40 overflow-hidden">
 						{adminView ? (
 							<button
-								onClick={() => removeLike(a.mal_id)}
+								onClick={() => removePatik(a.mal_id)}
 								disabled={!!removing[a.mal_id]}
-								aria-label="Remove liked anime"
+								aria-label="Remove patik anime"
 								className="absolute top-3 right-3 z-10 bg-red-600 text-white
                   w-8 h-8 rounded-full flex items-center justify-center
                   hover:bg-red-500"
@@ -166,9 +171,9 @@ export default function AdminLibraryClient({
 					<div className="p-4">
 						<h3 className="font-semibold text-lg mb-1">{a.title}</h3>
 						<p className="text-sm text-slate-300 mb-2">
-							{(a.genres ?? [])
+							{(a.zanrss ?? [])
 								.slice(0, 3)
-								.map((g) => g.name)
+								.map((g) => g.vards)
 								.join(" • ")}
 						</p>
 						<p className="text-sm text-slate-400 line-clamp-3">{a.synopsis}</p>
@@ -177,12 +182,14 @@ export default function AdminLibraryClient({
 			))}
 		</div>
 	) : (
-		<p className="text-slate-400 mt-2">This user hasn't liked anything yet.</p>
+		<p className="text-slate-400 mt-2">
+			This lietotajs hasn't patik anything yet.
+		</p>
 	);
 
 	return (
 		<div className="w-full">
-			<div className="flex flex-wrap gap-3">{genresUi}</div>
+			<div className="flex flex-wrap gap-3">{zanrssUi}</div>
 
 			{/* show grid for admin view; otherwise the server page shows it */}
 			{adminView ? animeGrid : null}

@@ -21,22 +21,22 @@ function SkeletonCard() {
 	);
 }
 
-type User = {
-	name: string | null;
+type Lietotajs = {
+	vards: string | null;
 	id: number;
 	email: string;
 	pwd: string;
 };
 
-export default function SwipeClient({ user }: { user: User }) {
+export default function SwipeClient({ lietotajs }: { lietotajs: Lietotajs }) {
 	const router = useRouter();
 
 	const [anime, setAnime] = useState<Anime | null>(null);
-	const [searchGenres, setSearchGenres] = useState<number[]>([]);
+	const [searchZanri, setSearchZanri] = useState<number[]>([]);
 	const [nextAnime, setNextAnime] = useState<Anime | null>(null);
 	const [loading, setLoading] = useState(true);
 
-	const isFetching = useRef(false);
+	const ielade = useRef(false);
 
 	const x = useMotionValue(0);
 	const rotate = useTransform(x, [-150, 150], [-10, 10]);
@@ -48,9 +48,9 @@ export default function SwipeClient({ user }: { user: User }) {
 		router.refresh();
 	}
 
-	async function fetchAnime(): Promise<Anime | null> {
-		if (isFetching.current) return null;
-		isFetching.current = true;
+	async function ieladetAnime(): Promise<Anime | null> {
+		if (ielade.current) return null;
+		ielade.current = true;
 
 		try {
 			const res = await fetch("/api/anime/random");
@@ -60,13 +60,13 @@ export default function SwipeClient({ user }: { user: User }) {
 
 			if (data?.data?.mal_id) {
 				const ani = data.data as Anime;
-				setSearchGenres(ani.searchGenres || []);
+				setSearchZanri(ani.searchZanri || []);
 				return ani;
 			}
 		} catch (err) {
-			console.error("fetchAnime:", err);
+			console.error("ieladetAnime:", err);
 		} finally {
-			isFetching.current = false;
+			ielade.current = false;
 		}
 
 		return null;
@@ -74,8 +74,8 @@ export default function SwipeClient({ user }: { user: User }) {
 
 	useEffect(() => {
 		(async () => {
-			const first = await fetchAnime();
-			const second = await fetchAnime();
+			const first = await ieladetAnime();
+			const second = await ieladetAnime();
 			setAnime(first);
 			setNextAnime(second);
 			setLoading(false);
@@ -83,14 +83,14 @@ export default function SwipeClient({ user }: { user: User }) {
 	}, []);
 
 	const preloadNext = async () => {
-		return await fetchAnime();
+		return await ieladetAnime();
 	};
 
-	const getNextAnime = async () => {
+	const panemtNextAnime = async () => {
 		setLoading(true);
 
-		const currentNext = nextAnime ?? (await preloadNext());
-		setAnime(currentNext);
+		const pasreizejaisNext = nextAnime ?? (await preloadNext());
+		setAnime(pasreizejaisNext);
 
 		const preload = await preloadNext();
 		setNextAnime(preload);
@@ -99,7 +99,7 @@ export default function SwipeClient({ user }: { user: User }) {
 		setLoading(false);
 	};
 
-	const sendFeedback = async (liked: boolean) => {
+	const sendFeedback = async (patik: boolean) => {
 		if (!anime) return;
 
 		await fetch("/api/anime/feedback", {
@@ -107,28 +107,28 @@ export default function SwipeClient({ user }: { user: User }) {
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
 				anime,
-				liked,
-				searchGenres,
-				userId: user.id,
+				patik,
+				searchZanri,
+				lietotajsId: lietotajs.id,
 			}),
 		});
 	};
 
-	const handleLike = async () => {
+	const handlePatik = async () => {
 		await sendFeedback(true);
-		await getNextAnime();
+		await panemtNextAnime();
 	};
 
-	const handleDislike = async () => {
+	const handleNepatik = async () => {
 		await sendFeedback(false);
-		await getNextAnime();
+		await panemtNextAnime();
 	};
 
-	const genres =
-		anime?.genres
-			?.map((g) => g.name)
+	const zanrss =
+		anime?.zanrss
+			?.map((g) => g.vards)
 			.slice(0, 3)
-			.join(" • ") || "No genre data";
+			.join(" • ") || "No zanrs data";
 
 	return (
 		<main className="flex flex-col items-center justify-center h-screen overflow-hidden bg-gradient-to-br from-slate-900 via-[#0f172a] to-slate-800 text-slate-100 select-none">
@@ -141,7 +141,7 @@ export default function SwipeClient({ user }: { user: User }) {
 						dragConstraints={{ left: 0, right: 0 }}
 						dragElastic={0.8}
 						onDragEnd={() => {
-							if (Math.abs(x.get()) > 120) getNextAnime();
+							if (Math.abs(x.get()) > 120) panemtNextAnime();
 							else x.set(0);
 						}}
 						initial={{ scale: 0.95, opacity: 0, y: 20 }}
@@ -167,7 +167,7 @@ export default function SwipeClient({ user }: { user: User }) {
 								<h2 className="text-2xl font-semibold text-white drop-shadow-md">
 									{anime.title}
 								</h2>
-								<p className="text-sm text-slate-300 mt-1">{genres}</p>
+								<p className="text-sm text-slate-300 mt-1">{zanrss}</p>
 							</div>
 						</div>
 					</motion.div>
@@ -178,15 +178,15 @@ export default function SwipeClient({ user }: { user: User }) {
 
 			<div className="flex gap-10 mt-8 relative z-20">
 				<button
-					onClick={handleDislike}
+					onClick={handleNepatik}
 					className="p-4 bg-red-500/90 hover:bg-red-600 rounded-full transition shadow-[0_0_30px_rgba(239,68,68,0.4)]"
-					title="Dislike"
+					title="Nepatik"
 				>
 					<XMarkIcon className="w-8 h-8 text-white" />
 				</button>
 
 				<button
-					onClick={getNextAnime}
+					onClick={panemtNextAnime}
 					className="p-4 bg-sky-500/90 hover:bg-sky-600 rounded-full transition shadow-[0_0_30px_rgba(56,189,248,0.4)]"
 					title="Reload"
 				>
@@ -194,9 +194,9 @@ export default function SwipeClient({ user }: { user: User }) {
 				</button>
 
 				<button
-					onClick={handleLike}
+					onClick={handlePatik}
 					className="p-4 bg-green-500/90 hover:bg-green-600 rounded-full transition shadow-[0_0_30px_rgba(34,197,94,0.4)]"
-					title="Like"
+					title="Patik"
 				>
 					<HeartIcon className="w-8 h-8 text-white" />
 				</button>

@@ -6,9 +6,9 @@ export async function POST(req: Request) {
 	const body = await req.json();
 
 	try {
-		const user = await login(body.email, body.password);
+		const lietotajs = await login(body.email, body.parole);
 
-		return NextResponse.json({ success: true, user });
+		return NextResponse.json({ success: true, lietotajs });
 	} catch (error: any) {
 		return NextResponse.json({ error: error.message }, { status: 401 });
 	}

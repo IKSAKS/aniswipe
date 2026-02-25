@@ -2,67 +2,67 @@ import { db } from "@/lib/db";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
-import { RoleName } from "@prisma/client";
+import { LomasVards } from "@prisma/client";
 
 const JWT_SECRET = process.env.JWT_SECRET!;
 
 type JwtPayload = {
-	userId: number;
+	lietotajsId: number;
 };
 
-export async function isAdmin() {
-	const user = await getCurrentUser();
-	if (!user) return false;
-	if (!user.role) return false;
-	return user.role === RoleName.ADMIN;
+export async function irAdmin() {
+	const lietotajs = await panemtPasreizejaisLietotajs();
+	if (!lietotajs) return false;
+	if (!lietotajs.loma) return false;
+	return lietotajs.loma === LomasVards.ADMIN;
 }
 
-export async function signup(email: string, password: string, name: string) {
-	const existing = await db.user.findUnique({
+export async function signup(email: string, parole: string, vards: string) {
+	const existing = await db.lietotajs.findUnique({
 		where: { email },
 	});
 
 	if (existing) {
-		throw new Error("User already exists");
+		throw new Error("Lietotajs already exists");
 	}
 
-	const hash = await bcrypt.hash(password, 12);
+	const hash = await bcrypt.hash(parole, 12);
 
-	const user = await db.user.create({
+	const lietotajs = await db.lietotajs.create({
 		data: {
 			email,
-			name,
+			vards,
 			pwd: hash,
 		},
 	});
 
-	await createSession(user.id);
+	await createSession(lietotajs.id);
 
-	return user;
+	return lietotajs;
 }
 
-export async function login(email: string, password: string) {
-	const user = await db.user.findUnique({
+export async function login(email: string, parole: string) {
+	const lietotajs = await db.lietotajs.findUnique({
 		where: { email },
 	});
 
-	if (!user) {
+	if (!lietotajs) {
 		throw new Error("Invalid credentials");
 	}
 
-	const valid = await bcrypt.compare(password, user.pwd);
+	const valid = await bcrypt.compare(parole, lietotajs.pwd);
 
 	if (!valid) {
 		throw new Error("Invalid credentials");
 	}
 
-	await createSession(user.id);
+	await createSession(lietotajs.id);
 
-	return user;
+	return lietotajs;
 }
 
-async function createSession(userId: number) {
-	const token = jwt.sign({ userId }, JWT_SECRET, {
+async function createSession(lietotajsId: number) {
+	const token = jwt.sign({ lietotajsId }, JWT_SECRET, {
 		expiresIn: "7d",
 	});
 
@@ -75,19 +75,19 @@ async function createSession(userId: number) {
 	});
 }
 
-export async function getCurrentUser() {
-	const token = (await cookies()).get("auth_token")?.value;
+export async function panemtPasreizejaisLietotajs() {
+	const token = (await cookies()).panemt("auth_token")?.value;
 
 	if (!token) return null;
 
 	try {
 		const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
 
-		const user = await db.user.findUnique({
-			where: { id: decoded.userId },
+		const lietotajs = await db.lietotajs.findUnique({
+			where: { id: decoded.lietotajsId },
 		});
 
-		return user;
+		return lietotajs;
 	} catch {
 		return null;
 	}

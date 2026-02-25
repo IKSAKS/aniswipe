@@ -2,19 +2,23 @@ import React from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { getCurrentUser, isAdmin } from "@/lib/auth";
+import { panemtPasreizejaisLietotajs, irAdmin } from "@/lib/auth";
 
-type UserRow = { id: number; name?: string | null; email?: string | null };
+type LietotajsRow = {
+	id: number;
+	vards?: string | null;
+	email?: string | null;
+};
 
 export default async function DashboardPage() {
-	const user = await getCurrentUser();
-	if (!user) redirect("/login");
+	const lietotajs = await panemtPasreizejaisLietotajs();
+	if (!lietotajs) redirect("/login");
 
-	if (!(await isAdmin())) redirect("/library");
+	if (!(await irAdmin())) redirect("/library");
 
-	const users = await db.user.findMany({
-		select: { id: true, name: true, email: true },
-		orderBy: { name: "asc" },
+	const lietotajss = await db.lietotajs.findMany({
+		select: { id: true, vards: true, email: true },
+		orderBy: { vards: "asc" },
 	});
 
 	return (
@@ -27,22 +31,22 @@ export default async function DashboardPage() {
 					<div>
 						<h1 className="text-3xl font-bold">Dashboard</h1>
 						<p className="text-sm text-slate-400 mt-1">
-							{user.name ?? user.email}
+							{lietotajs.vards ?? lietotajs.email}
 						</p>
 					</div>
 				</header>
 
 				<section>
-					<h2 className="text-xl font-semibold mb-3">All users</h2>
+					<h2 className="text-xl font-semibold mb-3">All lietotajss</h2>
 
-					{users.length ? (
+					{lietotajss.length ? (
 						<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-							{users.map((u: UserRow) => {
-								const label = u.name ?? u.email ?? `User ${u.id}`;
+							{lietotajss.map((u: LietotajsRow) => {
+								const label = u.vards ?? u.email ?? `Lietotajs ${u.id}`;
 								return (
 									<Link
 										key={u.id}
-										href={`/library?userid=${u.id}`}
+										href={`/library?lietotajsid=${u.id}`}
 										className="block bg-white/5 rounded-xl p-4 hover:bg-white/6
                                transition"
 									>
@@ -54,7 +58,7 @@ export default async function DashboardPage() {
 							})}
 						</div>
 					) : (
-						<p className="text-slate-400">No users found.</p>
+						<p className="text-slate-400">No lietotajss found.</p>
 					)}
 				</section>
 			</div>

@@ -1,18 +1,18 @@
 import { NextResponse } from "next/server";
-import { getRandomAnime, getAnimeById } from "@/lib/jikan";
-import { getCurrentUser } from "@/lib/auth";
+import { panemtRandomAnime, panemtAnimeById } from "@/lib/jikan";
+import { panemtPasreizejaisLietotajs } from "@/lib/auth";
 
 export async function GET() {
 	try {
-		const user = await getCurrentUser();
-		const userId = user?.id;
-		if (!userId)
+		const lietotajs = await panemtPasreizejaisLietotajs();
+		const lietotajsId = lietotajs?.id;
+		if (!lietotajsId)
 			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-		const malId = await getRandomAnime(userId);
+		const malId = await panemtRandomAnime(lietotajsId);
 		if (!malId) return NextResponse.json({ data: null }, { status: 204 });
 
-		const anime = await getAnimeById(malId);
+		const anime = await panemtAnimeById(malId);
 
 		if (!anime)
 			return NextResponse.json({ data: { mal_id: malId } }, { status: 206 });

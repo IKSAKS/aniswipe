@@ -6,9 +6,9 @@ import Link from "next/link";
 
 export default function Signup() {
 	const router = useRouter();
-	const [name, setName] = useState("");
+	const [vards, setName] = useState("");
 	const [email, setEmail] = useState("");
-	const [password, setPassword] = useState("");
+	const [parole, setPassword] = useState("");
 	const [error, setError] = useState("");
 	const [loading, setLoading] = useState(false);
 
@@ -26,7 +26,7 @@ export default function Signup() {
 		const res = await fetch("/api/signup", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ name, email, password }),
+			body: JSON.stringify({ vards, email, parole }),
 		});
 
 		const data = await res.json();
@@ -50,9 +50,9 @@ export default function Signup() {
 				<form onSubmit={handleSubmit} className="flex flex-col gap-4">
 					<input
 						type="text"
-						placeholder="Username"
-						value={name}
-						onChange={(e) => setName(e.target.value)}
+						placeholder="Lietotajsvards"
+						value={vards}
+						onChange={(e) => setName(e.tarpanemt.value)}
 						required
 						className="bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
 					/>
@@ -61,16 +61,16 @@ export default function Signup() {
 						type="email"
 						placeholder="Email"
 						value={email}
-						onChange={(e) => setEmail(e.target.value)}
+						onChange={(e) => setEmail(e.tarpanemt.value)}
 						required
 						className="bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
 					/>
 
 					<input
-						type="password"
+						type="parole"
 						placeholder="Password"
-						value={password}
-						onChange={(e) => setPassword(e.target.value)}
+						value={parole}
+						onChange={(e) => setPassword(e.tarpanemt.value)}
 						required
 						className="bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
 					/>

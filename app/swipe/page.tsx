@@ -1,13 +1,13 @@
-import { getCurrentUser } from "@/lib/auth";
+import { panemtPasreizejaisLietotajs } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import SwipeClient from "./SwipeClient";
 
 export default async function SwipePage() {
-	const user = await getCurrentUser();
+	const lietotajs = await panemtPasreizejaisLietotajs();
 
-	if (!user) {
+	if (!lietotajs) {
 		redirect("/login");
 	}
 
-	return <SwipeClient user={user} />;
+	return <SwipeClient lietotajs={lietotajs} />;
 }

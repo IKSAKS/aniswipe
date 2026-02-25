@@ -6,26 +6,26 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-type User = {
+type Lietotajs = {
 	id: number;
-	name: string | null;
+	vards: string | null;
 	email: string;
 	pwd: string;
 };
 
 export default function NavBar({
-	user,
+	lietotajs,
 	isadmin,
 }: {
-	user: User | null;
+	lietotajs: Lietotajs | null;
 	isadmin: boolean;
 }) {
 	const router = useRouter();
 	const [loading, setLoading] = useState(false);
 
-	if (!user) return null;
+	if (!lietotajs) return null;
 
-	useEffect(() => {}, [user]);
+	useEffect(() => {}, [lietotajs]);
 
 	async function handleLogout() {
 		setLoading(true);
@@ -43,7 +43,7 @@ export default function NavBar({
 	return (
 		<div className="absolute top-6 right-6 flex items-center gap-4 z-50">
 			<p className="text-slate-400 text-sm">
-				Welcome, {user.name ?? user.email}
+				Welcome, {lietotajs.vards ?? lietotajs.email}
 			</p>
 			<Link
 				href="/swipe"

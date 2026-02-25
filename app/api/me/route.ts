@@ -1,12 +1,12 @@
-import { getCurrentUser } from "@/lib/auth";
+import { panemtPasreizejaisLietotajs } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
 export async function GET() {
-	const user = await getCurrentUser();
+	const lietotajs = await panemtPasreizejaisLietotajs();
 
-	if (!user) {
+	if (!lietotajs) {
 		return NextResponse.json(null, { status: 401 });
 	}
 
-	return NextResponse.json(user);
+	return NextResponse.json(lietotajs);
 }
