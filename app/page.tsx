@@ -4,13 +4,13 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 export default function Home() {
-	const [lietotajs, setLietotajs] = useState<string | null>(null);
+	const [lietotajs, iestatitLietotajs] = useState<string | null>(null);
 
 	useEffect(() => {
 		fetch("/api/me").then(async (res) => {
 			if (res.ok) {
 				const data = await res.json();
-				setLietotajs(data.vards);
+				iestatitLietotajs(data.vards);
 			}
 		});
 	}, []);

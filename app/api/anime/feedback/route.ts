@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { registerPreference } from "@/lib/jikan";
-import { panemtPasreizejaisLietotajs } from "@/lib/auth";
+import { panemtPasreizejoLietotaju } from "@/lib/auth";
 
 export async function POST(req: Request) {
 	const body = await req.json();
-	const lietotajs = await panemtPasreizejaisLietotajs();
+	const lietotajs = await panemtPasreizejoLietotaju();
 	const lietotajsId = lietotajs?.id;
 	if (!lietotajsId)
 		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

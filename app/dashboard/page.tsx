@@ -2,7 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { panemtPasreizejaisLietotajs, irAdmin } from "@/lib/auth";
+import { panemtPasreizejoLietotaju, irAdmin } from "@/lib/auth";
 
 type LietotajsRow = {
 	id: number;
@@ -11,7 +11,7 @@ type LietotajsRow = {
 };
 
 export default async function DashboardPage() {
-	const lietotajs = await panemtPasreizejaisLietotajs();
+	const lietotajs = await panemtPasreizejoLietotaju();
 	if (!lietotajs) redirect("/login");
 
 	if (!(await irAdmin())) redirect("/library");

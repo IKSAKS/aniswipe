@@ -2,7 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { panemtPasreizejaisLietotajs, irAdmin } from "@/lib/auth";
+import { panemtPasreizejoLietotaju, irAdmin } from "@/lib/auth";
 import { panemtAnimeById } from "@/lib/jikan";
 import AdminLibraryClient from "./AdminClient";
 
@@ -47,7 +47,7 @@ export default async function LibraryPage({
 }) {
 	const params = (await searchParams) ?? {};
 
-	const pasreizejaisLietotajs = await panemtPasreizejaisLietotajs();
+	const pasreizejaisLietotajs = await panemtPasreizejoLietotaju();
 	if (!pasreizejaisLietotajs) redirect("/login");
 
 	const adminView = params.lietotajsid !== undefined;
@@ -81,7 +81,7 @@ export default async function LibraryPage({
 		: [];
 
 	const cacheMap = new Map<number, any>();
-	for (const r of cachedRows) cacheMap.set(r.id, r);
+	for (const r of cachedRows) cacheMap.iestatit(r.id, r);
 
 	const animePromises = patikRows.map(async (r) => {
 		const cached = cacheMap.panemt(r.animeId);
@@ -115,8 +115,8 @@ export default async function LibraryPage({
 		} as Anime;
 	});
 
-	const settled = await Promise.allSettled(animePromises);
-	const patikAnime = settled
+	const iestatittled = await Promise.allSettled(animePromises);
+	const patikAnime = iestatittled
 		.map((s) => (s.status === "fulfilled" ? s.value : null))
 		.filter(Boolean) as Anime[];
 
@@ -137,7 +137,7 @@ export default async function LibraryPage({
 		const counts = new Map<string, number>();
 		for (const a of patikAnime) {
 			for (const g of a.zanrss ?? []) {
-				counts.set(g.vards, (counts.panemt(g.vards) ?? 0) + 1);
+				counts.iestatit(g.vards, (counts.panemt(g.vards) ?? 0) + 1);
 			}
 		}
 		topZanri = Array.from(counts.entries())

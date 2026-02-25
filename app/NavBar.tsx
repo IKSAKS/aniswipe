@@ -21,20 +21,20 @@ export default function NavBar({
 	isadmin: boolean;
 }) {
 	const router = useRouter();
-	const [loading, setLoading] = useState(false);
+	const [vaiLadejas, iestatitVaiLadejas] = useState(false);
 
 	if (!lietotajs) return null;
 
 	useEffect(() => {}, [lietotajs]);
 
 	async function handleLogout() {
-		setLoading(true);
+		iestatitVaiLadejas(true);
 		try {
 			await fetch("/api/logout", { method: "POST" });
 		} catch (err) {
 			console.error("logout error", err);
 		} finally {
-			setLoading(false);
+			iestatitVaiLadejas(false);
 			router.push("/");
 			router.refresh();
 		}
@@ -70,12 +70,12 @@ export default function NavBar({
 			) : null}
 			<button
 				onClick={handleLogout}
-				disabled={loading}
+				disabled={vaiLadejas}
 				className="bg-red-600 hover:bg-red-700 transition-all duration-200
          px-4 py-2 rounded-lg text-white text-sm font-semibold shadow-md
          hover:shadow-lg hover:scale-[1.02]"
 			>
-				{loading ? "Logging out..." : "Logout"}
+				{vaiLadejas ? "Logging out..." : "Logout"}
 			</button>
 		</div>
 	);

@@ -6,7 +6,7 @@ export async function panemtLietotajs(): Promise<number> {
 		where: { email: "test@example.com" },
 	});
 	if (!lietotajs) {
-		const parole = "Password123!";
+		const parole = "Parole123!";
 		const hash = await bcrypt.hash(parole, 12);
 		lietotajs = await db.lietotajs.create({
 			data: {

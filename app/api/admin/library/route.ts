@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { panemtPasreizejaisLietotajs, irAdmin } from "@/lib/auth";
+import { panemtPasreizejoLietotaju, irAdmin } from "@/lib/auth";
 
 export async function POST(req: Request) {
-	const lietotajs = await panemtPasreizejaisLietotajs();
+	const lietotajs = await panemtPasreizejoLietotaju();
 	if (!lietotajs) {
 		return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 	}
