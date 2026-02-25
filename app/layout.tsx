@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { panemtPasreizejaisLietotajs, irAdmin } from "@/lib/auth";
+import { getCurrentUser, isAdmin } from "@/lib/auth";
 import NavBar from "./NavBar";
 
 export const dynamic = "force-dynamic";
@@ -15,15 +15,13 @@ export default async function RootLayout({
 }: {
 	children: React.ReactNode;
 }) {
-	const lietotajs = await panemtPasreizejaisLietotajs();
-	const lietotajsIsAdmin = await irAdmin();
+	const user = await getCurrentUser();
+	const userIsAdmin = await isAdmin();
 
 	return (
 		<html lang="en">
 			<body className="min-h-screen bg-slate-950 text-white">
-				{lietotajs ? (
-					<NavBar lietotajs={lietotajs} isadmin={lietotajsIsAdmin} />
-				) : null}
+				{user ? <NavBar user={user} isadmin={userIsAdmin} /> : null}
 				{children}
 			</body>
 		</html>

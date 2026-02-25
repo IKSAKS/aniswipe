@@ -1,20 +1,20 @@
 import { NextResponse } from "next/server";
 import { registerPreference } from "@/lib/jikan";
-import { panemtPasreizejaisLietotajs } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth";
 
 export async function POST(req: Request) {
 	const body = await req.json();
-	const lietotajs = await panemtPasreizejaisLietotajs();
-	const lietotajsId = lietotajs?.id;
-	if (!lietotajsId)
+	const user = await getCurrentUser();
+	const userId = user?.id;
+	if (!userId)
 		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-	const { anime, patik, searchZanri } = body;
-	if (anime && typeof patik === "boolean") {
+	const { anime, liked, searchGenres } = body;
+	if (anime && typeof liked === "boolean") {
 		registerPreference(
 			anime,
-			patik,
-			Array.isArray(searchZanri) ? searchZanri : [],
-			lietotajsId,
+			liked,
+			Array.isArray(searchGenres) ? searchGenres : [],
+			userId,
 		);
 	}
 	return NextResponse.json({ ok: true });

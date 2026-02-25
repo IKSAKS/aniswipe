@@ -1,21 +1,21 @@
 import { db } from "@/lib/db";
 import bcrypt from "bcrypt";
 
-export async function panemtLietotajs(): Promise<number> {
-	let lietotajs = await db.lietotajs.findUnique({
+export async function getUser(): Promise<number> {
+	let user = await db.user.findUnique({
 		where: { email: "test@example.com" },
 	});
-	if (!lietotajs) {
-		const parole = "Password123!";
-		const hash = await bcrypt.hash(parole, 12);
-		lietotajs = await db.lietotajs.create({
+	if (!user) {
+		const password = "Password123!";
+		const hash = await bcrypt.hash(password, 12);
+		user = await db.user.create({
 			data: {
 				pwd: hash,
 				email: "test@example.com",
-				vards: "Test Lietotajs",
+				name: "Test User",
 			},
 		});
 	}
 
-	return lietotajs.id;
+	return user.id;
 }

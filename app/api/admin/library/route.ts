@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { panemtPasreizejaisLietotajs, irAdmin } from "@/lib/auth";
+import { getCurrentUser, isAdmin } from "@/lib/auth";
 
 export async function POST(req: Request) {
-	const lietotajs = await panemtPasreizejaisLietotajs();
-	if (!lietotajs) {
+	const user = await getCurrentUser();
+	if (!user) {
 		return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 	}
-	if (!(await irAdmin())) {
+	if (!(await isAdmin())) {
 		return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 	}
 
@@ -20,45 +20,45 @@ export async function POST(req: Request) {
 
 	const action = body?.action;
 
-	if (action === "removePatik") {
-		const lietotajsId = Number(body.lietotajsId);
+	if (action === "removeLike") {
+		const userId = Number(body.userId);
 		const animeId = Number(body.animeId);
-		if (!lietotajsId || !animeId) {
+		if (!userId || !animeId) {
 			return NextResponse.json({ error: "Missing params" }, { status: 400 });
 		}
-		await db.lietotajsAnime.updateMany({
-			where: { lietotajsId, animeId },
-			data: { patik: false },
+		await db.userAnime.updateMany({
+			where: { userId, animeId },
+			data: { liked: false },
 		});
 		return NextResponse.json({ ok: true });
 	}
 
-	if (action === "updateZanrs") {
-		const lietotajsId = Number(body.lietotajsId);
-		const zanrsName = String(body.zanrsName ?? "").trim();
-		const smagums = Number(body.smagums ?? 0);
+	if (action === "updateGenre") {
+		const userId = Number(body.userId);
+		const genreName = String(body.genreName ?? "").trim();
+		const weight = Number(body.weight ?? 0);
 
-		if (!lietotajsId || !zanrsName) {
+		if (!userId || !genreName) {
 			return NextResponse.json({ error: "Missing params" }, { status: 400 });
 		}
 
-		let zanrs = await db.zanrs.findFirst({ where: { vards: zanrsName } });
-		if (!zanrs) {
-			zanrs = await db.zanrs.create({ data: { vards: zanrsName } });
+		let genre = await db.genre.findFirst({ where: { name: genreName } });
+		if (!genre) {
+			genre = await db.genre.create({ data: { name: genreName } });
 		}
 
-		const updated = await db.lietotajsZanrs.updateMany({
-			where: { lietotajsId, zanrsId: zanrs.id },
-			data: { smagums },
+		const updated = await db.userGenre.updateMany({
+			where: { userId, genreId: genre.id },
+			data: { weight },
 		});
 
 		if (updated.count === 0) {
-			await db.lietotajsZanrs.create({
-				data: { lietotajsId, zanrsId: zanrs.id, smagums },
+			await db.userGenre.create({
+				data: { userId, genreId: genre.id, weight },
 			});
 		}
 
-		return NextResponse.json({ ok: true, smagums });
+		return NextResponse.json({ ok: true, weight });
 	}
 
 	return NextResponse.json({ error: "Unknown action" }, { status: 400 });

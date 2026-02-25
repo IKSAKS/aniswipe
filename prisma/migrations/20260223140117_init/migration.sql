@@ -1,29 +1,29 @@
 -- CreateTable
-CREATE TABLE "Lietotajs" (
+CREATE TABLE "User" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     "email" TEXT NOT NULL,
-    "vards" TEXT
+    "name" TEXT
 );
 
 -- CreateTable
-CREATE TABLE "Zanrs" (
+CREATE TABLE "Genre" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    "vards" TEXT NOT NULL
+    "name" TEXT NOT NULL
 );
 
 -- CreateTable
-CREATE TABLE "LietotajsZanrs" (
-    "lietotajsId" INTEGER NOT NULL,
-    "zanrsId" INTEGER NOT NULL,
-    "smagums" INTEGER NOT NULL DEFAULT 1,
+CREATE TABLE "UserGenre" (
+    "userId" INTEGER NOT NULL,
+    "genreId" INTEGER NOT NULL,
+    "weight" INTEGER NOT NULL DEFAULT 1,
 
-    PRIMARY KEY ("lietotajsId", "zanrsId"),
-    CONSTRAINT "LietotajsZanrs_lietotajsId_fkey" FOREIGN KEY ("lietotajsId") REFERENCES "Lietotajs" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
-    CONSTRAINT "LietotajsZanrs_zanrsId_fkey" FOREIGN KEY ("zanrsId") REFERENCES "Zanrs" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+    PRIMARY KEY ("userId", "genreId"),
+    CONSTRAINT "UserGenre_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT "UserGenre_genreId_fkey" FOREIGN KEY ("genreId") REFERENCES "Genre" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Lietotajs_email_key" ON "Lietotajs"("email");
+CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Zanrs_vards_key" ON "Zanrs"("vards");
+CREATE UNIQUE INDEX "Genre_name_key" ON "Genre"("name");

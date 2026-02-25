@@ -12,47 +12,47 @@ datasource db {
   provider = "sqlite"
 }
 
-enum LomasVards {
-  LIETOTAJS
+enum RoleName {
+  USER
   ADMIN
 }
 
-model Lietotajs {
+model User {
   id       Int          @id @default(autoincrement())
   email    String       @unique
   pwd      String
-  vards     String?
-  loma     LomasVards @default(LIETOTAJS)
-  zanrss   LietotajsZanrs[]
-  anime    LietotajsAnime[]
+  name     String?
+  role     RoleName @default(USER)
+  genres   UserGenre[]
+  anime    UserAnime[]
 }
 
-model Zanrs {
+model Genre {
   id       Int          @id @default(autoincrement())
-  vards     String       @unique
-  lietotajss    LietotajsZanrs[]
+  name     String       @unique
+  users    UserGenre[]
 }
 
-model LietotajsZanrs {
-  lietotajsId   Int
-  zanrsId  Int
-  smagums   Int        @default(1)
+model UserGenre {
+  userId   Int
+  genreId  Int
+  weight   Int        @default(1)
 
-  lietotajs     Lietotajs   @relation(fields: [lietotajsId], references: [id])
-  zanrs    Zanrs  @relation(fields: [zanrsId], references: [id])
+  user     User   @relation(fields: [userId], references: [id])
+  genre    Genre  @relation(fields: [genreId], references: [id])
 
-  @@id([lietotajsId, zanrsId])
+  @@id([userId, genreId])
 }
 
-model LietotajsAnime {
-  lietotajsId   Int
+model UserAnime {
+  userId   Int
   animeId  Int
-  patik    Boolean
-  izveidots DateTime @default(now())
+  liked    Boolean
+  createdAt DateTime @default(now())
 
-  lietotajs     Lietotajs  @relation(fields: [lietotajsId], references: [id])
+  user     User  @relation(fields: [userId], references: [id])
 
-  @@id([lietotajsId, animeId])
+  @@id([userId, animeId])
 }
 
 model Anime {
@@ -60,7 +60,7 @@ model Anime {
   title     String
   synopsis  String?
   images    Json?
-  zanrss    Json?
+  genres    Json?
   fetchedAt DateTime @default(now())
 
   @@map("anime")

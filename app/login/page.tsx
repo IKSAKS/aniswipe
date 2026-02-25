@@ -7,7 +7,7 @@ import Link from "next/link";
 export default function Login() {
 	const router = useRouter();
 	const [email, setEmail] = useState("");
-	const [parole, setPassword] = useState("");
+	const [password, setPassword] = useState("");
 	const [error, setError] = useState("");
 	const [loading, setLoading] = useState(false);
 
@@ -25,7 +25,7 @@ export default function Login() {
 		const res = await fetch("/api/login", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ email, parole }),
+			body: JSON.stringify({ email, password }),
 		});
 
 		const data = await res.json();
@@ -51,16 +51,16 @@ export default function Login() {
 						type="email"
 						placeholder="Email"
 						value={email}
-						onChange={(e) => setEmail(e.tarpanemt.value)}
+						onChange={(e) => setEmail(e.target.value)}
 						required
 						className="bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
 					/>
 
 					<input
-						type="parole"
+						type="password"
 						placeholder="Password"
-						value={parole}
-						onChange={(e) => setPassword(e.tarpanemt.value)}
+						value={password}
+						onChange={(e) => setPassword(e.target.value)}
 						required
 						className="bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
 					/>

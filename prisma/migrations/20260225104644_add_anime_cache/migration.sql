@@ -4,7 +4,7 @@ CREATE TABLE "anime" (
     "title" TEXT NOT NULL,
     "synopsis" TEXT,
     "images" JSONB,
-    "zanrss" JSONB,
+    "genres" JSONB,
     "votes" INTEGER,
     "fetchedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

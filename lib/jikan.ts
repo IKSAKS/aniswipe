@@ -8,15 +8,15 @@ export interface Anime {
 	mal_id: number;
 	title: string;
 	synopsis?: string | null;
-	zanrss?: { vards: string; mal_id?: number }[];
+	genres?: { name: string; mal_id?: number }[];
 	images: AnimeImage;
-	searchZanri?: number[];
+	searchGenres?: number[];
 	votes?: number;
 }
 
-const lietotajsCache = new Map<number, any>();
-let allZanri: { mal_id: number; vards: string }[] = [];
-let zanrssLoaded = false;
+const userCache = new Map<number, any>();
+let allGenres: { mal_id: number; name: string }[] = [];
+let genresLoaded = false;
 
 let lastRequestTime = 0;
 const MIN_DELAY = 400;
@@ -48,15 +48,15 @@ async function safeGet<T = any>(
 	}
 }
 
-async function loadAllZanri(): Promise<void> {
-	if (zanrssLoaded) return;
-	const res = await safeGet("https://api.jikan.moe/v4/zanrss/anime", {
-		params: { filter: "zanrss" },
+async function loadAllGenres(): Promise<void> {
+	if (genresLoaded) return;
+	const res = await safeGet("https://api.jikan.moe/v4/genres/anime", {
+		params: { filter: "genres" },
 	});
 	const data: any[] = res.data?.data ?? [];
-	allZanri = data.map((g) => ({ mal_id: g.mal_id, vards: g.vards.trim() }));
-	zanrssLoaded = true;
-	console.log("Loaded", allZanri.length, "zanrss");
+	allGenres = data.map((g) => ({ mal_id: g.mal_id, name: g.name.trim() }));
+	genresLoaded = true;
+	console.log("Loaded", allGenres.length, "genres");
 }
 
 function shuffle<T>(arr: T[]): T[] {
@@ -75,14 +75,14 @@ function mapDbRowToAnime(row: any): Anime {
 		mal_id: row.id,
 		title: row.title,
 		synopsis: row.synopsis ?? null,
-		zanrss: (row.zanrss ?? []) as { vards: string; mal_id?: number }[],
+		genres: (row.genres ?? []) as { name: string; mal_id?: number }[],
 		images: (row.images ?? {
 			jpg: { image_url: "", large_image_url: "" },
 		}) as AnimeImage,
 	};
 }
 
-export async function panemtAnimeById(
+export async function getAnimeById(
 	malId: number,
 	forceRefresh = false,
 ): Promise<Anime | null> {
@@ -104,8 +104,8 @@ export async function panemtAnimeById(
 			mal_id: r.mal_id,
 			title: r.title || r.title_english || r.title_japanese || "Untitled",
 			synopsis: r.synopsis ?? null,
-			zanrss: (r.zanrss ?? []).map((g: any) => ({
-				vards: g.vards,
+			genres: (r.genres ?? []).map((g: any) => ({
+				name: g.name,
 				mal_id: g.mal_id,
 			})),
 			images: {
@@ -121,7 +121,7 @@ export async function panemtAnimeById(
 						"",
 				},
 			},
-			searchZanri: [],
+			searchGenres: [],
 			votes: r.votes ?? 0,
 		};
 
@@ -131,7 +131,7 @@ export async function panemtAnimeById(
 				title: animeObj.title,
 				synopsis: animeObj.synopsis,
 				images: animeObj.images as any,
-				zanrss: animeObj.zanrss as any,
+				genres: animeObj.genres as any,
 				fetchedAt: new Date(),
 			},
 			create: {
@@ -139,14 +139,14 @@ export async function panemtAnimeById(
 				title: animeObj.title,
 				synopsis: animeObj.synopsis,
 				images: animeObj.images as any,
-				zanrss: animeObj.zanrss as any,
+				genres: animeObj.genres as any,
 				fetchedAt: new Date(),
 			},
 		});
 
 		return animeObj;
 	} catch (err) {
-		console.warn("panemtAnimeById failed for", malId, err);
+		console.warn("getAnimeById failed for", malId, err);
 		if (cached) return mapDbRowToAnime(cached);
 		return null;
 	}
@@ -160,7 +160,7 @@ async function upsertAnimeCacheFromObject(a: Anime) {
 				title: a.title,
 				synopsis: a.synopsis ?? null,
 				images: a.images as any,
-				zanrss: a.zanrss as any,
+				genres: a.genres as any,
 				fetchedAt: new Date(),
 			},
 			create: {
@@ -168,7 +168,7 @@ async function upsertAnimeCacheFromObject(a: Anime) {
 				title: a.title,
 				synopsis: a.synopsis ?? null,
 				images: a.images as any,
-				zanrss: a.zanrss as any,
+				genres: a.genres as any,
 				fetchedAt: new Date(),
 			},
 		});
@@ -183,110 +183,110 @@ async function upsertAnimeCacheFromObject(a: Anime) {
 
 export async function registerPreference(
 	anime: Anime,
-	patik: boolean,
-	searchZanrsIds: number[] = [],
-	lietotajsId: number,
+	liked: boolean,
+	searchGenreIds: number[] = [],
+	userId: number,
 ) {
-	await db.lietotajsAnime.upsert({
+	await db.userAnime.upsert({
 		where: {
-			lietotajsId_animeId: {
-				lietotajsId,
+			userId_animeId: {
+				userId,
 				animeId: anime.mal_id,
 			},
 		},
 		update: {
-			patik,
+			liked,
 		},
 		create: {
-			lietotajsId,
+			userId,
 			animeId: anime.mal_id,
-			patik,
+			liked,
 		},
 	});
 
 	await upsertAnimeCacheFromObject(anime);
 
-	for (const g of anime.zanrss ?? []) {
+	for (const g of anime.genres ?? []) {
 		if (!g.mal_id) continue;
 
-		const zanrs = await db.zanrs.upsert({
+		const genre = await db.genre.upsert({
 			where: { id: g.mal_id },
 			update: {},
 			create: {
 				id: g.mal_id,
-				vards: g.vards.trim(),
+				name: g.name.trim(),
 			},
 		});
 
-		const shouldBoost = patik && !searchZanrsIds.includes(g.mal_id);
-		const delta = patik ? (shouldBoost ? 1 : 0) : -0.2;
+		const shouldBoost = liked && !searchGenreIds.includes(g.mal_id);
+		const delta = liked ? (shouldBoost ? 1 : 0) : -0.2;
 
-		await db.lietotajsZanrs.upsert({
+		await db.userGenre.upsert({
 			where: {
-				lietotajsId_zanrsId: {
-					lietotajsId,
-					zanrsId: zanrs.id,
+				userId_genreId: {
+					userId,
+					genreId: genre.id,
 				},
 			},
 			update: {
-				smagums: {
+				weight: {
 					increment: delta,
 				},
 			},
 			create: {
-				lietotajsId,
-				zanrsId: zanrs.id,
-				smagums: patik ? 2 : 1,
+				userId,
+				genreId: genre.id,
+				weight: liked ? 2 : 1,
 			},
 		});
 	}
 }
 
-async function pickZanri(lietotajsId: number): Promise<number[]> {
-	const lietotajsZanri = await db.lietotajsZanrs.findMany({
+async function pickGenres(userId: number): Promise<number[]> {
+	const userGenres = await db.userGenre.findMany({
 		where: {
-			lietotajsId,
-			smagums: { gte: 1 },
+			userId,
+			weight: { gte: 1 },
 		},
 		orderBy: {
-			smagums: "desc",
+			weight: "desc",
 		},
 		take: 2,
 		include: {
-			zanrs: true,
+			genre: true,
 		},
 	});
 
-	if (!lietotajsZanri.length) {
-		await loadAllZanri();
-		return shuffle(allZanri)
+	if (!userGenres.length) {
+		await loadAllGenres();
+		return shuffle(allGenres)
 			.slice(0, 1)
 			.map((g) => g.mal_id);
 	}
 
-	return lietotajsZanri.map((g: any) => g.zanrs.id);
+	return userGenres.map((g: any) => g.genre.id);
 }
 
 const PERSONALISE_THRESHOLD = 5;
 
-async function patikCount(lietotajsId: number): Promise<number> {
-	const zanrss = await db.lietotajsAnime.findMany({
+async function likedCount(userId: number): Promise<number> {
+	const genres = await db.userAnime.findMany({
 		where: {
-			lietotajsId,
-			patik: true,
+			userId,
+			liked: true,
 		},
 	});
 
-	return zanrss.length;
+	return genres.length;
 }
 
-const lietotajsRecommendationHistory = new Map<number, Set<number>>();
+const userRecommendationHistory = new Map<number, Set<number>>();
 
-async function refillPool(lietotajsId: number): Promise<Anime[]> {
-	const likes = await patikCount(lietotajsId);
+async function refillPool(userId: number): Promise<Anime[]> {
+	const likes = await likedCount(userId);
 	const usePersonalised = likes >= PERSONALISE_THRESHOLD;
 	let res: AxiosResponse<any> | null = null;
-	const gIds = usePersonalised ? await pickZanri(lietotajsId) : [];
+	const gIds = usePersonalised ? await pickGenres(userId) : [];
 	const recommendations = true;
 
 	if (!usePersonalised) {
@@ -298,28 +298,27 @@ async function refillPool(lietotajsId: number): Promise<Anime[]> {
 			},
 		});
 	} else {
-		const recentPatik = await db.lietotajsAnime.findMany({
+		const recentLiked = await db.userAnime.findMany({
 			where: {
-				lietotajsId,
-				patik: true,
+				userId,
+				liked: true,
 			},
 			orderBy: {
-				izveidots: "desc",
+				createdAt: "desc",
 			},
 			take: 5,
 		});
 
-		const used =
-			lietotajsRecommendationHistory.get(lietotajsId) ?? new Set<number>();
-		const candidates = recentPatik.filter((a) => !used.has(a.animeId));
+		const used = userRecommendationHistory.get(userId) ?? new Set<number>();
+		const candidates = recentLiked.filter((a) => !used.has(a.animeId));
 
 		const source =
 			candidates.length > 0
 				? candidates[Math.floor(Math.random() * candidates.length)]
-				: recentPatik[Math.floor(Math.random() * recentPatik.length)];
+				: recentLiked[Math.floor(Math.random() * recentLiked.length)];
 
 		used.add(source.animeId);
-		lietotajsRecommendationHistory.set(lietotajsId, used);
+		userRecommendationHistory.set(userId, used);
 
 		res = await safeGet(
 			"https://api.jikan.moe/v4/anime/" + source.animeId + "/recommendations",
@@ -335,7 +334,7 @@ async function refillPool(lietotajsId: number): Promise<Anime[]> {
 				mal_id: r.mal_id,
 				title: r.title || r.title_english || r.title_japanese || "Untitled",
 				synopsis: r.synopsis ?? "",
-				zanrss: r.zanrss ?? [],
+				genres: r.genres ?? [],
 				images: {
 					jpg: {
 						image_url:
@@ -346,7 +345,7 @@ async function refillPool(lietotajsId: number): Promise<Anime[]> {
 							"",
 					},
 				},
-				searchZanri: usePersonalised || !recommendations ? gIds : [],
+				searchGenres: usePersonalised || !recommendations ? gIds : [],
 				votes: anime.votes ?? 0,
 			} as Anime;
 		})
@@ -367,12 +366,12 @@ async function refillPool(lietotajsId: number): Promise<Anime[]> {
 	return valid;
 }
 
-async function takeFromPool(lietotajsId: number): Promise<Anime | null> {
-	if (!lietotajsCache.has(lietotajsId)) {
-		lietotajsCache.set(lietotajsId, { pool: [] });
+async function takeFromPool(userId: number): Promise<Anime | null> {
+	if (!userCache.has(userId)) {
+		userCache.set(userId, { pool: [] });
 	}
 
-	const cache = lietotajsCache.get(lietotajsId)!;
+	const cache = userCache.get(userId)!;
 
 	cache.pool = cache.pool.sort(
 		(a: any, b: any) => (b.votes ?? 0) - (a.votes ?? 0),
@@ -380,24 +379,24 @@ async function takeFromPool(lietotajsId: number): Promise<Anime | null> {
 
 	while (cache.pool.length) {
 		const pick = cache.pool.shift()!;
-		const lietotajsAnime = await db.lietotajsAnime.findUnique({
+		const userAnime = await db.userAnime.findUnique({
 			where: {
-				lietotajsId_animeId: {
-					lietotajsId,
+				userId_animeId: {
+					userId,
 					animeId: pick?.mal_id,
 				},
 			},
 		});
-		if (lietotajsAnime) {
+		if (userAnime) {
 			continue;
 		}
 		return pick;
 	}
 
-	const refill = await refillPool(lietotajsId);
+	const refill = await refillPool(userId);
 
-	const seen = await db.lietotajsAnime.findMany({
-		where: { lietotajsId },
+	const seen = await db.userAnime.findMany({
+		where: { userId },
 		select: { animeId: true },
 	});
 	const seenIds = new Set(seen.map((s) => s.animeId));
@@ -415,14 +414,14 @@ async function takeFromPool(lietotajsId: number): Promise<Anime | null> {
 				mal_id: r.mal_id,
 				title: r.title,
 				synopsis: r.synopsis ?? "",
-				zanrss: r.zanrss ?? [],
+				genres: r.genres ?? [],
 				images: {
 					jpg: {
 						image_url: r.images?.jpg?.image_url || "",
 						large_image_url: r.images?.jpg?.large_image_url || "",
 					},
 				},
-				searchZanri: [],
+				searchGenres: [],
 				votes: 0,
 			}))
 			.filter((a: Anime) => !seenIds.has(a.mal_id));
@@ -430,20 +429,18 @@ async function takeFromPool(lietotajsId: number): Promise<Anime | null> {
 		cache.pool = refill.filter((anime) => !seenIds.has(anime.mal_id));
 	}
 
-	return takeFromPool(lietotajsId);
+	return takeFromPool(userId);
 }
 
-export async function panemtRandomAnime(
-	lietotajsId: number,
-): Promise<number | null> {
-	const pick = await takeFromPool(lietotajsId);
+export async function getRandomAnime(userId: number): Promise<number | null> {
+	const pick = await takeFromPool(userId);
 	return pick?.mal_id ?? null;
 }
 
-export async function panemtRandomAnimeFull(
-	lietotajsId: number,
+export async function getRandomAnimeFull(
+	userId: number,
 ): Promise<Anime | null> {
-	const malId = await panemtRandomAnime(lietotajsId);
+	const malId = await getRandomAnime(userId);
 	if (!malId) return null;
-	return panemtAnimeById(malId);
+	return getAnimeById(malId);
 }

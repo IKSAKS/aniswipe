@@ -4,13 +4,13 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 export default function Home() {
-	const [lietotajs, setLietotajs] = useState<string | null>(null);
+	const [user, setUser] = useState<string | null>(null);
 
 	useEffect(() => {
 		fetch("/api/me").then(async (res) => {
 			if (res.ok) {
 				const data = await res.json();
-				setLietotajs(data.vards);
+				setUser(data.name);
 			}
 		});
 	}, []);
@@ -25,8 +25,8 @@ export default function Home() {
 					favorite show in seconds.
 				</p>
 
-				{lietotajs ? (
-					<p className="text-slate-400">Welcome back, {lietotajs}!</p>
+				{user ? (
+					<p className="text-slate-400">Welcome back, {user}!</p>
 				) : (
 					<div className="flex justify-center gap-4">
 						<Link

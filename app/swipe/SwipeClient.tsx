@@ -21,22 +21,22 @@ function SkeletonCard() {
 	);
 }
 
-type Lietotajs = {
-	vards: string | null;
+type User = {
+	name: string | null;
 	id: number;
 	email: string;
 	pwd: string;
 };
 
-export default function SwipeClient({ lietotajs }: { lietotajs: Lietotajs }) {
+export default function SwipeClient({ user }: { user: User }) {
 	const router = useRouter();
 
 	const [anime, setAnime] = useState<Anime | null>(null);
-	const [searchZanri, setSearchZanri] = useState<number[]>([]);
+	const [searchGenres, setSearchGenres] = useState<number[]>([]);
 	const [nextAnime, setNextAnime] = useState<Anime | null>(null);
 	const [loading, setLoading] = useState(true);
 
-	const ielade = useRef(false);
+	const isFetching = useRef(false);
 
 	const x = useMotionValue(0);
 	const rotate = useTransform(x, [-150, 150], [-10, 10]);
@@ -48,9 +48,9 @@ export default function SwipeClient({ lietotajs }: { lietotajs: Lietotajs }) {
 		router.refresh();
 	}
 
-	async function ieladetAnime(): Promise<Anime | null> {
-		if (ielade.current) return null;
-		ielade.current = true;
+	async function fetchAnime(): Promise<Anime | null> {
+		if (isFetching.current) return null;
+		isFetching.current = true;
 
 		try {
 			const res = await fetch("/api/anime/random");
@@ -60,13 +60,13 @@ export default function SwipeClient({ lietotajs }: { lietotajs: Lietotajs }) {
 
 			if (data?.data?.mal_id) {
 				const ani = data.data as Anime;
-				setSearchZanri(ani.searchZanri || []);
+				setSearchGenres(ani.searchGenres || []);
 				return ani;
 			}
 		} catch (err) {
-			console.error("ieladetAnime:", err);
+			console.error("fetchAnime:", err);
 		} finally {
-			ielade.current = false;
+			isFetching.current = false;
 		}
 
 		return null;
@@ -74,8 +74,8 @@ export default function SwipeClient({ lietotajs }: { lietotajs: Lietotajs }) {
 
 	useEffect(() => {
 		(async () => {
-			const first = await ieladetAnime();
-			const second = await ieladetAnime();
+			const first = await fetchAnime();
+			const second = await fetchAnime();
 			setAnime(first);
 			setNextAnime(second);
 			setLoading(false);
@@ -83,14 +83,14 @@ export default function SwipeClient({ lietotajs }: { lietotajs: Lietotajs }) {
 	}, []);
 
 	const preloadNext = async () => {
-		return await ieladetAnime();
+		return await fetchAnime();
 	};
 
-	const panemtNextAnime = async () => {
+	const getNextAnime = async () => {
 		setLoading(true);
 
-		const pasreizejaisNext = nextAnime ?? (await preloadNext());
-		setAnime(pasreizejaisNext);
+		const currentNext = nextAnime ?? (await preloadNext());
+		setAnime(currentNext);
 
 		const preload = await preloadNext();
 		setNextAnime(preload);
@@ -99,7 +99,7 @@ export default function SwipeClient({ lietotajs }: { lietotajs: Lietotajs }) {
 		setLoading(false);
 	};
 
-	const sendFeedback = async (patik: boolean) => {
+	const sendFeedback = async (liked: boolean) => {
 		if (!anime) return;
 
 		await fetch("/api/anime/feedback", {
@@ -107,28 +107,28 @@ export default function SwipeClient({ lietotajs }: { lietotajs: Lietotajs }) {
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
 				anime,
-				patik,
-				searchZanri,
-				lietotajsId: lietotajs.id,
+				liked,
+				searchGenres,
+				userId: user.id,
 			}),
 		});
 	};
 
-	const handlePatik = async () => {
+	const handleLike = async () => {
 		await sendFeedback(true);
-		await panemtNextAnime();
+		await getNextAnime();
 	};
 
-	const handleNepatik = async () => {
+	const handleDislike = async () => {
 		await sendFeedback(false);
-		await panemtNextAnime();
+		await getNextAnime();
 	};
 
-	const zanrss =
-		anime?.zanrss
-			?.map((g) => g.vards)
+	const genres =
+		anime?.genres
+			?.map((g) => g.name)
 			.slice(0, 3)
-			.join(" • ") || "No zanrs data";
+			.join(" • ") || "No genre data";
 
 	return (
 		<main className="flex flex-col items-center justify-center h-screen overflow-hidden bg-gradient-to-br from-slate-900 via-[#0f172a] to-slate-800 text-slate-100 select-none">
@@ -141,7 +141,7 @@ export default function SwipeClient({ lietotajs }: { lietotajs: Lietotajs }) {
 						dragConstraints={{ left: 0, right: 0 }}
 						dragElastic={0.8}
 						onDragEnd={() => {
-							if (Math.abs(x.get()) > 120) panemtNextAnime();
+							if (Math.abs(x.get()) > 120) getNextAnime();
 							else x.set(0);
 						}}
 						initial={{ scale: 0.95, opacity: 0, y: 20 }}
@@ -167,7 +167,7 @@ export default function SwipeClient({ lietotajs }: { lietotajs: Lietotajs }) {
 								<h2 className="text-2xl font-semibold text-white drop-shadow-md">
 									{anime.title}
 								</h2>
-								<p className="text-sm text-slate-300 mt-1">{zanrss}</p>
+								<p className="text-sm text-slate-300 mt-1">{genres}</p>
 							</div>
 						</div>
 					</motion.div>
@@ -178,15 +178,15 @@ export default function SwipeClient({ lietotajs }: { lietotajs: Lietotajs }) {
 
 			<div className="flex gap-10 mt-8 relative z-20">
 				<button
-					onClick={handleNepatik}
+					onClick={handleDislike}
 					className="p-4 bg-red-500/90 hover:bg-red-600 rounded-full transition shadow-[0_0_30px_rgba(239,68,68,0.4)]"
-					title="Nepatik"
+					title="Dislike"
 				>
 					<XMarkIcon className="w-8 h-8 text-white" />
 				</button>
 
 				<button
-					onClick={panemtNextAnime}
+					onClick={getNextAnime}
 					className="p-4 bg-sky-500/90 hover:bg-sky-600 rounded-full transition shadow-[0_0_30px_rgba(56,189,248,0.4)]"
 					title="Reload"
 				>
@@ -194,9 +194,9 @@ export default function SwipeClient({ lietotajs }: { lietotajs: Lietotajs }) {
 				</button>
 
 				<button
-					onClick={handlePatik}
+					onClick={handleLike}
 					className="p-4 bg-green-500/90 hover:bg-green-600 rounded-full transition shadow-[0_0_30px_rgba(34,197,94,0.4)]"
-					title="Patik"
+					title="Like"
 				>
 					<HeartIcon className="w-8 h-8 text-white" />
 				</button>
