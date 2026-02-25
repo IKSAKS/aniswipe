@@ -108,7 +108,7 @@ export default function AdminLibraryClient({
 					key={vards}
 					value={values[vards] ?? ""}
 					onChange={(e) =>
-						iestatitValues((v) => ({ ...v, [vards]: e.target.value }))
+						iestatitValues((v) => ({ ...v, [vards]: e.tarpanemt.value }))
 					}
 					onBlur={() => saveZanrs(vards)}
 					onKeyDown={(e) => {
