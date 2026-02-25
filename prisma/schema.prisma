@@ -1,0 +1,68 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum RoleName {
+  USER
+  ADMIN
+}
+
+model User {
+  id       Int          @id @default(autoincrement())
+  email    String       @unique
+  pwd      String
+  name     String?
+  role     RoleName @default(USER)
+  genres   UserGenre[]
+  anime    UserAnime[]
+}
+
+model Genre {
+  id       Int          @id @default(autoincrement())
+  name     String       @unique
+  users    UserGenre[]
+}
+
+model UserGenre {
+  userId   Int
+  genreId  Int
+  weight   Int        @default(1)
+
+  user     User   @relation(fields: [userId], references: [id])
+  genre    Genre  @relation(fields: [genreId], references: [id])
+
+  @@id([userId, genreId])
+}
+
+model UserAnime {
+  userId   Int
+  animeId  Int
+  liked    Boolean
+  createdAt DateTime @default(now())
+
+  user     User  @relation(fields: [userId], references: [id])
+
+  @@id([userId, animeId])
+}
+
+model Anime {
+  id        Int    @id
+  title     String
+  synopsis  String?
+  images    Json?
+  genres    Json?
+  fetchedAt DateTime @default(now())
+
+  @@map("anime")
+}
+

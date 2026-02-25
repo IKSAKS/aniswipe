@@ -1,0 +1,82 @@
+"use client";
+
+export const dynamic = "force-dynamic";
+
+import React, { useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+
+type User = {
+	id: number;
+	name: string | null;
+	email: string;
+	pwd: string;
+};
+
+export default function NavBar({
+	user,
+	isadmin,
+}: {
+	user: User | null;
+	isadmin: boolean;
+}) {
+	const router = useRouter();
+	const [loading, setLoading] = useState(false);
+
+	if (!user) return null;
+
+	useEffect(() => {}, [user]);
+
+	async function handleLogout() {
+		setLoading(true);
+		try {
+			await fetch("/api/logout", { method: "POST" });
+		} catch (err) {
+			console.error("logout error", err);
+		} finally {
+			setLoading(false);
+			router.push("/");
+			router.refresh();
+		}
+	}
+
+	return (
+		<div className="absolute top-6 right-6 flex items-center gap-4 z-50">
+			<p className="text-slate-400 text-sm">
+				Welcome, {user.name ?? user.email}
+			</p>
+			<Link
+				href="/swipe"
+				className="bg-white/5 px-3 py-2 rounded-md text-sm font-medium
+         text-slate-100 hover:bg-white/10 transition"
+			>
+				Swipe
+			</Link>
+			<Link
+				href="/library"
+				className="bg-white/5 px-3 py-2 rounded-md text-sm font-medium
+         text-slate-100 hover:bg-white/10 transition"
+			>
+				Library
+			</Link>
+			{isadmin ? (
+				<Link
+					href="/dashboard"
+					className="bg-white/5 px-3 py-2 rounded-md text-sm font-medium
+         text-slate-100 hover:bg-white/10 transition"
+				>
+					Dashboard
+				</Link>
+			) : null}
+			<button
+				onClick={handleLogout}
+				disabled={loading}
+				className="bg-red-600 hover:bg-red-700 transition-all duration-200
+         px-4 py-2 rounded-lg text-white text-sm font-semibold shadow-md
+         hover:shadow-lg hover:scale-[1.02]"
+			>
+				{loading ? "Logging out..." : "Logout"}
+			</button>
+		</div>
+	);
+}
