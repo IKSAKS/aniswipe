@@ -1,3 +1,5 @@
+//Sajā failā notiek viss, kas saistīts ar autentifikāciju - reģistrācija, pieteikšanās, sesijas izveide un lietotāja iegūšana no JWT tokena.
+//Paroles tiek hashotas ar bcrypt
 import { db } from "@/lib/db";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";

@@ -21,6 +21,7 @@ let genresLoaded = false;
 let lastRequestTime = 0;
 const MIN_DELAY = 400;
 
+//funkcija ir prieks API pieprasījumiem uz Jikan, kas izvairās no rate limit kļūdas, ieviešot aizkavi un atkārtotus mēģinājumus pēc nepieciešamības.
 async function safeGet<T = any>(
 	url: string,
 	opts?: AxiosRequestConfig,
@@ -82,6 +83,7 @@ function mapDbRowToAnime(row: any): Anime {
 	};
 }
 
+//šī funkcija atgriež anime no tā malId, vispirms mēģinot to atrast kešā datubāzē, un ja tas nav pieejams vai ir novecojis, tad iegūst to no Jikan API un atjaunina kešu.
 export async function getAnimeById(
 	malId: number,
 	forceRefresh = false,
@@ -176,10 +178,6 @@ async function upsertAnimeCacheFromObject(a: Anime) {
 		console.warn("Failed to upsert anime cache", a.mal_id, err);
 	}
 }
-
-/* ------------------------------
-   Preference registration (unchanged)
-   ------------------------------ */
 
 export async function registerPreference(
 	anime: Anime,
@@ -282,6 +280,7 @@ async function likedCount(userId: number): Promise<number> {
 
 const userRecommendationHistory = new Map<number, Set<number>>();
 
+//šī funkcija atbild par anime rekomendāciju loģiku, tai skaitā gan populāro anime piedāvāšanu, gan personalizētu rekomendāciju ģenerēšanu, balstoties uz lietotāja vēsturē "patīk" anime .
 async function refillPool(userId: number): Promise<Anime[]> {
 	const likes = await likedCount(userId);
 	const usePersonalised = likes >= PERSONALISE_THRESHOLD;
@@ -366,6 +365,7 @@ async function refillPool(userId: number): Promise<Anime[]> {
 	return valid;
 }
 
+//šī funkcija atbild par anime rekomendāciju loģiku, tai skaitā gan populāro anime piedāvāšanu, gan personalizētu rekomendāciju ģenerēšanu, balstoties uz lietotāja vēsturē "patīk" anime .
 async function takeFromPool(userId: number): Promise<Anime | null> {
 	if (!userCache.has(userId)) {
 		userCache.set(userId, { pool: [] });
